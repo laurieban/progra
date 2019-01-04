@@ -151,7 +151,8 @@ namespace Projet_QUATRO_0
 
             //On cherche si trois pièces ayant une même caractéristique sont alignées
             int[] place = { -1, -1 }; //place sert à donner, quand elle existe, la position (ligne, colonne) de la place vide qui permet d'aligner 4 pièces
-            //Pour les lignes
+
+            //On cherche à faire un quarto sur une des lignes
             int i = 0; //parcourt les lignes
             int j; //parcourt les colonnes
             int k = 0; //parcourt les caractéristiques des pièces
@@ -185,11 +186,96 @@ namespace Projet_QUATRO_0
                     k++;
                 }
                 i++;
+                k = 0;
             }
-            Console.WriteLine("i:" + i); 
-            Console.WriteLine("k:" + k);
-            Console.WriteLine(piece[k - 1]);
-            Console.WriteLine(place[0] +""+ place[1]);
+
+            //On cherche à faire un quarto sur une des colonnes
+            j = 0; //parcourt les colonnes
+            int ligne;
+            while (j < plateau.GetLength(1) && place[1] == -1) //place[0]==-1 --> on a pas trouvé de place "intelligente" ou placer la pièce
+            {
+                while (k < 4 && place[1] == -1)
+                {
+                    cpt = 0; //compte le nombre de pièces ayant la caractéristique k sur la colonne j
+                    ligne = -1; //ligne représente la ligne vide de la colonne j quand trois pièces de même caractéristiques sont présentes sur cette colonne
+                    carac = piece[k];
+                    for (i = 0; i < plateau.GetLength(0); i++)
+                    {
+                        if (plateau[i, j][k] == carac)
+                        {
+                            cpt++;
+                        }
+                        if (plateau[i, j][k] == '0')
+                        {
+                            ligne = i;
+                        }
+                    }
+                    if (cpt == 3) //trois pièces de mêmes caractéristiques présentes sur la ligne i
+                    {
+                        place[0] = ligne;
+                        place[1] = j;
+                    }
+                    k++;
+                }
+                j++;
+                k = 0;
+            }
+
+            //On cherche à faire un quarto sur la diagonale \
+            //i = 0; //on parcourt la diagonale plateau[i,i]
+            k = 0;
+            int diagonale1;
+            while(k < 4 && place[0] == -1) //place[0]==-1 --> on a pas trouvé de place "intelligente" ou placer la pièce
+            {
+                cpt = 0; //compte le nombre de pièces ayant la caractéristique k sur la diagonale \
+                diagonale1 = -1; //diagonale1 représente la case vide de la diagonale \ quand trois pièces de même caractéristiques sont présentes sur cette diagonale
+                carac = piece[k];
+                for (i = 0; i < plateau.GetLength(0); i++)
+                {
+                    if (plateau[i, i][k] == carac)
+                    {
+                        cpt++;
+                    }
+                    if (plateau[i, i][k] == '0')
+                    {
+                        diagonale1 = i;
+                    }
+                }
+                if (cpt == 3) //trois pièces de mêmes caractéristiques présentes sur la ligne i
+                {
+                    place[0] = diagonale1;
+                    place[1] = diagonale1;
+                }
+                k++;
+            }
+
+            //On cherche à faire un quarto sur la diagonale /
+            //i = 0; //on parcourt la diagonale plateau[i,i]
+            k = 0;
+            int diagonale2;
+            while (k < 4 && place[0] == -1) //place[0]==-1 --> on a pas trouvé de place "intelligente" ou placer la pièce
+            {
+                cpt = 0; //compte le nombre de pièces ayant la caractéristique k sur la diagonale \
+                diagonale2 = -1; //diagonale1 représente la case vide de la diagonale \ quand trois pièces de même caractéristiques sont présentes sur cette diagonale
+                carac = piece[k];
+                for (i = 0; i < plateau.GetLength(0); i++) 
+                {
+                    if (plateau[i, 3 - i][k] == carac) 
+                    {
+                        cpt++;
+                    }
+                    if (plateau[i, 3 - i][k] == '0')
+                    {
+                        diagonale2 = i;
+                    }
+                }
+                if (cpt == 3) //trois pièces de mêmes caractéristiques présentes sur la ligne i
+                {
+                    place[0] = diagonale2;
+                    place[1] = 3 - diagonale2;
+                }
+                k++;
+            }
 
             //On place la pièce sur le plateau de manière à gagner quand cela est possible, de manière aléatoire sinon
             string position;
@@ -197,6 +283,7 @@ namespace Projet_QUATRO_0
             {
                 plateau[place[0], place[1]] = piece;
                 position = string.Format("{0}{1}",place[0],place[1]);
+                Console.WriteLine(position);
             }
             else
             {
@@ -205,7 +292,6 @@ namespace Projet_QUATRO_0
                 position = cases[indice];
                 plateau[(int)char.GetNumericValue(position[0]), (int)char.GetNumericValue(position[1])] = piece;
             }
-            Console.WriteLine(position);
             
             //On actualise les données: cases, pieces, joueur
             ActualiserTableau(ref cases, position);
