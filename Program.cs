@@ -99,7 +99,6 @@ namespace Projet_QUATRO_0
             //Choix d'une pièce aléatoire dans le tableau pieces
             int indice = _rng.Next(pieces.Length);
             string piece = pieces[indice];
-
             return piece;
         }
 
@@ -282,7 +281,7 @@ namespace Projet_QUATRO_0
         /// <param name="cases"></param>
         /// <param name="joueur"></param>
         /// <returns></returns>
-        public static string ChoisirPieceIntelligent(ref string[,] plateau, ref string[] pieces, ref string[] cases, ref int joueur) 
+        public static string ChoisirPieceIntelligent(string[,] plateau, string[] pieces, string[] cases, ref int joueur) 
         {
             //On recopie le tableau pieces dans piecesPossibles
             string[] piecesPossibles = new string[pieces.Length];
@@ -350,33 +349,26 @@ namespace Projet_QUATRO_0
         }
 
         /// <summary>
-        /// Gagne en un coup avec la piece donnée si la configuration du plateau le permet
+        /// Retourne les coordonnées qui permettent de gagner avec piece sur une ligne si elles existent
         /// </summary>
         /// <param name="plateau"></param>
-        /// <param name="pieces"></param>
-        /// <param name="cases"></param>
-        /// <param name="joueur"></param>
+        /// <param name="place"></param>
         /// <param name="piece"></param>
-        public static void PlacerIntelligent(ref string[,] plateau, ref string[] pieces, ref string[] cases, ref int joueur, string piece) 
+        /// <returns></returns>
+        public static void PlacerIntelligentLigne(string[,] plateau, ref int[] place, string piece)
         {
-            //On cherche si trois pièces ayant une même caractéristique sont alignées
-            int[] place = { -1, -1 }; //place sert à donner, quand elle existe, la position (ligne, colonne) de la place vide qui permet d'aligner 4 pièces
-
-            //On cherche à faire un quarto sur une des lignes
-            int i = 0; //parcourt les lignes
-            int j; //parcourt les colonnes
-            int k = 0; //parcourt les caractéristiques des pièces
-            int cpt;
-            int col;
+            int i=0;
+            int k = 0;
+            int cpt, col;
             char carac;
-            while (i < plateau.GetLength(0) && place[1] == -1) //place[1]==-1 --> on a pas trouvé de place "intelligente" ou placer la pièce
+            while (i < plateau.GetLength(0) && place[0] == -1) //on a pas trouvé de place "intelligente" ou placer la pièce
             {
-                while (k < 4 && place[1] == -1)
+                while (k < 4)
                 {
                     cpt = 0; //compte le nombre de pièces ayant la caractéristique k sur la ligne i
                     col = -1; //col représente la colonne vide de la ligne i quand trois pièces de même caractéristiques sont présentes sur cette ligne
                     carac = piece[k];
-                    for (j = 0; j < plateau.GetLength(1); j++)
+                    for (int j = 0; j < plateau.GetLength(1); j++)
                     {
                         if (plateau[i, j][k] == carac)
                         {
@@ -397,18 +389,29 @@ namespace Projet_QUATRO_0
                 i++;
                 k = 0;
             }
+        }
 
-            //On cherche à faire un quarto sur une des colonnes
-            j = 0; //parcourt les colonnes
-            int ligne;
-            while (j < plateau.GetLength(1) && place[0] == -1) //place[0]==-1 --> on a pas trouvé de place "intelligente" ou placer la pièce
+        /// <summary>
+        /// Retourne les coordonnées qui permettent de gagner avec piece sur une colonne si elles existent
+        /// </summary>
+        /// <param name="plateau"></param>
+        /// <param name="place"></param>
+        /// <param name="piece"></param>
+        /// <returns></returns>
+        public static void PlacerIntelligentColonne(string[,] plateau, ref int[] place, string piece)
+        {
+            int j = 0;
+            int k = 0;
+            int cpt, ligne;
+            char carac;
+            while (j < plateau.GetLength(1))
             {
                 while (k < 4 && place[0] == -1)
                 {
                     cpt = 0; //compte le nombre de pièces ayant la caractéristique k sur la colonne j
                     ligne = -1; //ligne représente la ligne vide de la colonne j quand trois pièces de même caractéristiques sont présentes sur cette colonne
                     carac = piece[k];
-                    for (i = 0; i < plateau.GetLength(0); i++)
+                    for (int i = 0; i < plateau.GetLength(0); i++)
                     {
                         if (plateau[i, j][k] == carac)
                         {
@@ -429,60 +432,80 @@ namespace Projet_QUATRO_0
                 j++;
                 k = 0;
             }
+        }
+
+        /// <summary>
+        /// Retourne les coordonnées qui permettent de gagner avec piece sur une diagonale si elles existent. diagonale=true traite la diagonale \ et diagonale=false traite la diagonale /
+        /// </summary>
+        /// <param name="plateau"></param>
+        /// <param name="place"></param>
+        /// <param name="piece"></param>
+        /// <param name="diagonale"></param>
+        public static void PlacerIntelligentDiagonale(string[,] plateau, ref int[] place, string piece, bool diagonale)
+        {
+            int k = 0;
+            int cpt, ligne;
+            int indice = 0;
+            char carac;
+            while (k < 4 && place[0] == -1) //place[0]==-1 --> on a pas trouvé de place "intelligente" ou placer la pièce
+            {
+                cpt = 0; //compte le nombre de pièces ayant la caractéristique k sur la diagonale 
+                ligne = -1; 
+                carac = piece[k];
+                for (int i = 0; i < plateau.GetLength(0); i++)
+                {
+                    if (diagonale==true) //on traite la diagonale \
+                    {
+                        indice = i;
+                    }
+                    else //on traite la diagonale /
+                    {
+                        indice = 3 - i;
+                    }
+                    if (plateau[i, indice][k] == carac)
+                    {
+                        cpt++;
+                    }
+                    if (plateau[i, indice][k] == '0')
+                    {
+                        ligne = i;
+                    }
+                }
+                if (cpt == 3 && ligne != -1) //trois pièces de mêmes caractéristiques présentes sur la diagonale 
+                {
+                    place[0] = ligne;
+                    place[1] = indice;
+                }
+                k++;
+            }
+        }
+        /// <summary>
+        /// Gagne en un coup avec la piece donnée si la configuration du plateau le permet
+        /// </summary>
+        /// <param name="plateau"></param>
+        /// <param name="pieces"></param>
+        /// <param name="cases"></param>
+        /// <param name="joueur"></param>
+        /// <param name="piece"></param>
+        public static void PlacerIntelligent(ref string[,] plateau, ref string[] pieces, ref string[] cases, string piece) 
+        {
+            //On cherche si trois pièces ayant une même caractéristique sont alignées
+            int[] place = { -1, -1 }; //place sert à donner, quand elle existe, la position (ligne, colonne) de la place vide qui permet d'aligner 4 pièces
+            
+            //On cherche à faire un quarto sur une des lignes
+            PlacerIntelligentLigne(plateau, ref place, piece);
+
+            //On cherche à faire un quarto sur une des colonnes
+            PlacerIntelligentColonne(plateau, ref place, piece);
+
 
             //On cherche à faire un quarto sur la diagonale \
-            k = 0;
-            int diagonale1;
-            while (k < 4 && place[0] == -1) //place[0]==-1 --> on a pas trouvé de place "intelligente" ou placer la pièce
-            {
-                cpt = 0; //compte le nombre de pièces ayant la caractéristique k sur la diagonale \
-                diagonale1 = -1; //diagonale1 représente la case vide de la diagonale \ quand trois pièces de même caractéristiques sont présentes sur cette diagonale
-                carac = piece[k];
-                for (i = 0; i < plateau.GetLength(0); i++)
-                {
-                    if (plateau[i, i][k] == carac)
-                    {
-                        cpt++;
-                    }
-                    if (plateau[i, i][k] == '0')
-                    {
-                        diagonale1 = i;
-                    }
-                }
-                if (cpt == 3 && diagonale1 != -1) //trois pièces de mêmes caractéristiques présentes sur la diagonale \
-                {
-                    place[0] = diagonale1;
-                    place[1] = diagonale1;
-                }
-                k++;
-            }
+            bool diagonale = true;
+            PlacerIntelligentDiagonale(plateau, ref place, piece, diagonale);
 
             //On cherche à faire un quarto sur la diagonale /
-            k = 0;
-            int diagonale2;
-            while (k < 4 && place[0] == -1) //place[0]==-1 --> on a pas trouvé de place "intelligente" ou placer la pièce
-            {
-                cpt = 0; //compte le nombre de pièces ayant la caractéristique k sur la diagonale \
-                diagonale2 = -1; //diagonale1 représente la case vide de la diagonale \ quand trois pièces de même caractéristiques sont présentes sur cette diagonale
-                carac = piece[k];
-                for (i = 0; i < plateau.GetLength(0); i++)
-                {
-                    if (plateau[i, 3 - i][k] == carac)
-                    {
-                        cpt++;
-                    }
-                    if (plateau[i, 3 - i][k] == '0')
-                    {
-                        diagonale2 = i;
-                    }
-                }
-                if (cpt == 3 && diagonale2 != -1)  //trois pièces de mêmes caractéristiques présentes sur la diagonale /
-                {
-                    place[0] = diagonale2;
-                    place[1] = 3 - diagonale2;
-                }
-                k++;
-            }
+            diagonale = false;
+            PlacerIntelligentDiagonale(plateau, ref place, piece, diagonale);
 
             //On place la pièce sur le plateau de manière à gagner quand cela est possible, de manière aléatoire sinon
             string position;
@@ -516,15 +539,15 @@ namespace Projet_QUATRO_0
         {
             if (joueur == 1) //si c'est au tour de l'utilisateur de jouer
             {
-                string piece;
                 //Choix de la pièce par l'ordinateur
+                string piece;
                 if (niveau == 1) //cas du niveau aléatoire
                 {
                     piece = ChoisirPieceAleatoire(pieces);
                 }
                 else //cas du niveau intelligent
                 {
-                    piece = ChoisirPieceIntelligent(ref plateau, ref pieces, ref cases, ref joueur);
+                    piece = ChoisirPieceIntelligent(plateau, pieces, cases, ref joueur);
                 }
                 //Choix d'une case pour placer la pièce par l'utilisateur parmi les cases disponibles
                 string position;
@@ -545,7 +568,7 @@ namespace Projet_QUATRO_0
             {
                 //Choix par l'utilisateur d'une pièce que l'ordinateur doit placer parmi les pièces restantes
                 int indice_piece; //indice de la pièce choisie par l'utilisateur pour l'ordinateur
-                string piece = ""; //piece choisie par l'utilisateur
+                string piece = "";
                 do
                 {
                     Console.WriteLine("\n Choisissez parmi les pièces suivantes celle que l'ordinateur va devoir placer: \n (entrez le numéro situé en face de la pièce voulue)\n");
@@ -554,15 +577,13 @@ namespace Projet_QUATRO_0
                 }
                 while (indice_piece < 0 || indice_piece >= pieces.Length || TrouverValeur(pieces, pieces[indice_piece]) == false);
                 piece = pieces[indice_piece];
-                //Cas du niveau aléatoire
-                if (niveau == 1)
+                if (niveau == 1) //Cas du niveau aléatoire
                 {
                     PlacerAleatoire(ref plateau, ref pieces, ref cases, ref joueur, piece);
                 }
-                //Cas du niveau intelligent
-                else
+                else //Cas du niveau intelligent
                 {
-                    PlacerIntelligent(ref plateau, ref pieces, ref cases, ref joueur, piece);
+                    PlacerIntelligent(ref plateau, ref pieces, ref cases, piece);
                 }
             }
             //On passe au joueur suivant
@@ -661,7 +682,6 @@ namespace Projet_QUATRO_0
             }
             else
             {
-                //Console.Write(plateau[i, j]);
                 string representation = ""; //on crée les représentations de la forme des pièces
                 switch (piece.Substring(0, 2))
                 {
@@ -691,8 +711,7 @@ namespace Projet_QUATRO_0
                 Console.ForegroundColor = ConsoleColor.DarkGray;
             }
         }
-
-
+        
         /// <summary>
         /// Affichage du plateau et des pièces qu'il contient
         /// </summary>
@@ -722,7 +741,7 @@ namespace Projet_QUATRO_0
         /// <param name="quarto"></param>
         public static void AfficherQuarto(string[,] plateau, string quarto)
         {
-            Console.WriteLine("\n\n  \t0\t\t1\t\t2\t\t3\t");
+            Console.WriteLine("\n\n\n  \t0\t\t1\t\t2\t\t3\t");
             for (int i = 0; i < plateau.GetLength(0); i++)
             {
                 Console.WriteLine("   --------------------------------------------------------------");
@@ -744,7 +763,7 @@ namespace Projet_QUATRO_0
                 }
                 Console.WriteLine("|");
             }
-            Console.WriteLine("   --------------------------------------------------------------");
+            Console.WriteLine("   --------------------------------------------------------------\n");
         }
 
         /// <summary>
@@ -820,7 +839,6 @@ namespace Projet_QUATRO_0
         {
             //Initialisation du plateau, des pièces et des positions
             string[] pieces = new string[] { "RPHC", "RPBC", "RTHC", "RTHF", "RPHF", "RPBF", "RTBC", "RTBF", "CPHC", "CPBC", "CTHC", "CTHF", "CPHF", "CPBF", "CTBC", "CTBF" }; //tableau contenant les pieces restantes à placer
-            //string[] representation = new string[] { "( ) HC", "( ) BC", "(O) HC", "(O) HF", "( ) BF","(O) BC","[ ] HC", }
             string[] cases = new string[] { "00", "01", "02", "03", "10", "11", "12", "13", "20", "21", "22", "23", "30", "31", "32", "33" }; //tableau contenant les cases libres du plateau
             //Initialisation du plateau: tableau 4x4 avec des "0000"                                                                                                                             
             string[,] plateau = new string[4, 4];
